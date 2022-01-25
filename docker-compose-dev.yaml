@@ -1,0 +1,183 @@
+version: '3.8'
+
+services:
+  nginx:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 10M
+        reservations:
+          cpus: '0.1'
+          memory: 5M
+    build: 
+      dockerfile: ./docker/nginx.dockerfile
+      context: .
+    image: r4deu51/nginx_to_do_app_image
+    container_name: nginx_to_do_app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443"
+    networks:
+      - appnetworkdev
+    depends_on:
+      - postgresql
+      - mongodb
+      - node
+      - react1
+      - react2
+
+  node:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 240M
+        reservations:
+          cpus: '0.1'
+          memory: 220M
+    build: 
+      dockerfile: ./docker/node.dockerfile
+      context: .
+    image: r4deu51/node_to_do_app_image
+    container_name: node_to_do_app
+    restart: unless-stopped
+    command: yarn dev
+    ports:
+      - "3000"
+    networks:
+      - appnetworkdev
+    depends_on:
+      - postgresql
+      - mongodb
+    volumes:
+      - "C:/Users/ramon/Documents/programing/web/todo-app/server:/app/:rw"
+
+  postgresql:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 80M
+        reservations:
+          cpus: '0.10'
+          memory: 50M
+    build: 
+      dockerfile: ./docker/postgresql.dockerfile
+      context: .
+    image: r4deu51/postgresql_to_do_app_image
+    container_name: postgresql_to_do_app
+    restart: unless-stopped
+    ports:
+      - "5432"
+    networks:
+      - appnetworkdev
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: root
+      POSTGRES_DB: todo
+
+  mongodb:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 200M
+        reservations:
+          cpus: '0.10'
+          memory: 180M
+    build: 
+      dockerfile: ./docker/mongodb.dockerfile
+      context: .
+    image: r4deu51/mongodb_to_do_app_image
+    container_name: mongodb_to_do_app
+    restart: unless-stopped
+    ports:
+      - "27017"
+    networks:
+      - appnetworkdev
+    volumes:
+       - mongodb:/data/db/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 30M
+        reservations:
+          cpus: '0.1'
+          memory: 15M
+    build: 
+      dockerfile: ./docker/redis.dockerfile
+      context: .
+    image: r4deu51/redis_to_do_app_image
+    container_name: redis_to_do_app
+    restart: unless-stopped
+    ports:
+      - "6379"
+    networks:
+      - appnetworkdev
+
+  react1:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 30M
+        reservations:
+          cpus: '0.01'
+          memory: 20M
+    build: 
+      dockerfile: ./docker/react.dockerfile
+      context: .
+    image: r4deu51/react_to_do_app_image
+    container_name: react_to_do_app1
+    restart: unless-stopped
+    ports:
+      - "3000"
+    networks:
+      - appnetworkdev
+    # volumes:
+    #   - "C:/Users/ramon/Documents/programing/web/todo-app/client/:/app/:ro"
+    depends_on:
+      - node
+      - postgresql
+      - mongodb
+      
+  react2:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 30M
+        reservations:
+          cpus: '0.01'
+          memory: 20M
+    build: 
+      dockerfile: ./docker/react.dockerfile
+      context: .
+    image: r4deu51/react_to_do_app_image
+    container_name: react_to_do_app2
+    restart: unless-stopped
+    ports:
+      - "3000"
+    networks:
+      - appnetworkdev
+    # volumes:
+    #   - "C:/Users/ramon/Documents/programing/web/todo-app/client/:/app/:ro"
+    depends_on:
+      - node
+      - postgresql
+      - mongodb
+
+networks:
+  appnetworkdev:
+    driver: bridge
+
+volumes:
+  mongodb:

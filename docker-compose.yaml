@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  nginx:
+    build: 
+      dockerfile: ./docker/nginx.dockerfile
+      context: .
+    image: r4deu51/nginx_to_do_app_image
+    container_name: nginx_to_do_app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443"
+    networks:
+      - appnetwork
+    depends_on:
+      - postgresql
+      - mongodb
+      - node
+      - react1
+      - react2
+
+  node:
+    build: 
+      dockerfile: ./docker/node.dockerfile
+      context: .
+    image: r4deu51/node_to_do_app_image
+    container_name: node_to_do_app
+    restart: unless-stopped
+    ports:
+      - "3000"
+    networks:
+      - appnetwork
+    depends_on:
+      - postgresql
+      - mongodb
+
+  postgresql:
+    build: 
+      dockerfile: ./docker/postgresql.dockerfile
+      context: .
+    image: r4deu51/postgresql_to_do_app_image
+    container_name: postgresql_to_do_app
+    restart: unless-stopped
+    ports:
+      - "5432"
+    networks:
+      - appnetwork
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: root
+      POSTGRES_DB: todo
+
+  mongodb:
+    build: 
+      dockerfile: ./docker/mongodb.dockerfile
+      context: .
+    image: r4deu51/mongodb_to_do_app_image
+    container_name: mongodb_to_do_app
+    restart: unless-stopped
+    ports:
+      - "27017"
+    networks:
+      - appnetwork
+    volumes:
+       - mongodb:/data/db/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  redis:
+    build: 
+      dockerfile: ./docker/redis.dockerfile
+      context: .
+    image: r4deu51/redis_to_do_app_image
+    container_name: redis_to_do_app
+    restart: unless-stopped
+    ports:
+      - "6379"
+    networks:
+      - appnetwork
+
+  react1:
+    build: 
+      dockerfile: ./docker/react.dockerfile
+      context: .
+    image: r4deu51/react_to_do_app_image
+    container_name: react_to_do_app1
+    restart: unless-stopped
+    ports:
+      - "3000"
+    networks:
+      - appnetwork
+    # volumes:
+    #   - "C:/Users/ramon/Documents/programing/web/todo-app/client/:/app/:ro"
+    depends_on:
+      - node
+      - postgresql
+      - mongodb
+      
+  react2:
+    build: 
+      dockerfile: ./docker/react.dockerfile
+      context: .
+    image: r4deu51/react_to_do_app_image
+    container_name: react_to_do_app2
+    restart: unless-stopped
+    ports:
+      - "3000"
+    networks:
+      - appnetwork
+    # volumes:
+    #   - "C:/Users/ramon/Documents/programing/web/todo-app/client/:/app/:ro"
+    depends_on:
+      - node
+      - postgresql
+      - mongodb
+
+networks:
+  appnetwork:
+    driver: bridge
+
+volumes:
+  mongodb:
